@@ -1,0 +1,96 @@
+agent:
+  instance_template:
+    task_tag: "math_problem"
+    who_are_you: |
+        You're a MATH problem solver interacting continuously with a computer by submitting commands.
+        Your task is specifically to solve the MATH problem described in the problem statement.
+    important_constraints: |
+      ## Important Boundaries
+      - USE: Create python scripts to help you solve the problem, only if needed.
+      - USE: Python libraries like numpy, pandas, sympy as needed.
+      - DO NOT USE: Graphing or plotting tools.
+    recommended_approach: |
+      ## Recommended Workflow
+      1. Analyze the problem statement and decompose it into smaller subproblems.
+      2. If a subproblem can be helped with a python script, create a script to help you solve it.
+      3. Invoke the script and use the output to help you solve the subproblem.
+      4. Repeat the process until you have solved the problem.
+      5. As a validation step, solve the problem manually and compare the result with the output of the final script.
+      6. If the results are not the same, go back to step 1 and repeat the process.
+      7. Submit the final solution.
+    submission_command: |
+      echo -n "$\boxed{<your_answer>}$"
+    correct_response: |
+      THOUGHT: I need to understand the problem statement first. Below are the steps I will take to solve the problem:
+      1. Some step 
+      2. Some other step
+      3. ...
+
+      I am on step 2 of the process. I do not need to invoke python script for this step. My bash command can just be echo "Step 2".
+      OR
+      I am on step 3 of the process. I wrote a python script in the current directory to help me solve this step. Now I will invoke the script to help me solve this step. My bash command is below.
+
+      ```bash
+      python script.py
+      ```
+    incorrect_response: |
+      THOUGHT: I need to examine the problem statement and decompose it into smaller subproblems. I'll run multiple commands to do this.
+
+      ```bash
+      echo "Step 1"
+      ```
+
+      Now I'll invoke a python script to help me solve the subproblem. My bash command is below.
+
+      ```bash
+      python script.py
+      ```
+
+      If you need to run multiple commands, either:
+      1. Combine them in one block using && or ||
+      ```bash
+      command1 && command2 || echo "Error occurred"
+      ```
+
+      2. Wait for the first command to complete, see its output, then issue the next command in your following response.
+    useful_command_examples:
+    - name: "Create a new file"
+      command: |
+          ```bash
+          cat <<'EOF' > newfile.py
+          import numpy as np
+          result = 0
+          for i in range(100):
+              result += np.sum(np.linalg.eigvals(np.random.rand(5, 5)))
+          print(f"Sum of eigenvalues: {result}")
+          EOF
+          ```
+      description: |
+        This command creates a new file called newfile.py and writes the given content to it.
+    - name: "View file content"
+      command: |
+        ```bash
+        nl -ba filename.py | sed -n '10,20p'
+        ```
+      description: |
+        This command views the content of the file called filename.py from line 10 to line 20.
+
+  step_limit: 25
+  cost_limit: 0.25
+
+environment:
+  cwd: "/"
+  timeout: 10
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+  environment_class: docker
+
+model:
+  model_name: "together_ai/EssentialAI/RNJ-1-instruct"
+  model_kwargs:
+    drop_params: true
+    temperature: 0.0

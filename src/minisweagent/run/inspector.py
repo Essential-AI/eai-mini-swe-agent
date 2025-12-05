@@ -188,11 +188,61 @@ class TrajectoryInspector(App):
         vs = self.query_one(VerticalScroll)
         vs.scroll_to(y=vs.scroll_target_y - 15)
 
+def explode_jsonl(path: str, temp_dir: str) -> None:
+    # explode the jsonl file into different json files
+    filename = os.path.basename(path)
+    local_jsonl = os.path.join(temp_dir, filename)
+    jsons = [json.loads(js) for js in open(local_jsonl).read().split("\n") if js.strip()]
+    # write each json to a new file in the temp directory
+    for i, js in enumerate(jsons):
+        if "resolved" in js:
+            # json is dump from traj_stats upload, and not a direct jsonl of trajectories
+            id = js["id"]
+            js = js["trajectory"]
+        else:
+            id = i
+        with open(os.path.join(temp_dir, f"{id}.traj.json"), "w") as f:
+            json.dump(js, f, indent=4)
+    # remove the jsonl file
+    os.remove(local_jsonl)
+
+def download_gs_directory(path: str, cache_dir: str = "/var/tmp/mini-swe-agent-inspector") -> str:
+    import logging
+    import tempfile
+    import subprocess
+    # use subprocess to run gsutil -m cp -r gs://path/to/directory /tmp/directory
+    if not os.path.exists(cache_dir):
+        os.makedirs(cache_dir)
+    # get the directory name from the path
+    assert path.startswith('gs://')
+    directory_name = path[len('gs://'): ]
+    temp_dir = os.path.join(cache_dir, directory_name)
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+    else:
+        logging.info(f"Cache {temp_dir} exists", flush=True)
+        return temp_dir
+    logging.info(f"Downloading to cache {temp_dir}", flush=True)
+    subprocess.run(["gsutil", "-m", "cp", "-r", path, temp_dir], check=True)
+    logging.info(f"Downloaded {path} to {temp_dir}", flush=True)
+
+    # if the file is a jsonl file, explode it into different json files
+    # they might be dump from traj_stats upload, and not a direct jsonl of trajectories
+    # in which case extract the trajectory from the json and write it to a new file
+    if path.endswith(".jsonl"):
+        explode_jsonl(path, temp_dir)
+        logging.info(f"Exploded {path} into different json files. Removed jsonl", flush=True)
+
+    return temp_dir
 
 @app.command(help=__doc__)
 def main(
     path: str = typer.Argument(".", help="Directory to search for trajectory files or specific trajectory file"),
 ) -> None:
+    # if path starts with gs:// download the directory contents to a local temporary directory
+    if path.startswith("gs://"):
+        path = download_gs_directory(path)
+
     path_obj = Path(path)
 
     if path_obj.is_file():

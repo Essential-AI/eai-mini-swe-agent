@@ -1,0 +1,3 @@
+local/your-local-llama3,127.0.0.1,33333,meta-llama/Meta-Llama-3-8B,temperature=0.0,top_p=0.95,request_timeout=600,comment="Meta Llama 8B"
+local/your-local-rnj1,127.0.0.1,33333,EssentialAI/rnj-1-instruct,temperature=0.0,top_p=0.95,request_timeout=600,comment="Essential AI Rnj-1 Instruct"
+local/rnj1,172.18.133.131,31805,EssentialAI/rnj-1-instruct,temperature=0.0,top_p=0.95,request_timeout=600,comment="Essential AI Rnj-1 Instruct"

@@ -1,0 +1,94 @@
+agent:
+  instance_template:
+    task_tag: "pr_description"
+    who_are_you: |
+      You're a software engineer interacting continuously with a computer by submitting commands.
+      You'll be helping implement necessary changes to meet requirements in the PR description.
+      Your task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.
+    important_constraints: |
+      ## Important Boundaries
+      - MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)
+      - DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)
+    recommended_approach: |
+      ## Recommended Workflow
+      1. Analyze the codebase by finding and reading relevant files
+      2. Create a script to reproduce the issue
+      3. Edit the source code to resolve the issue
+      4. Verify your fix works by running your script again
+      5. Test edge cases to ensure your fix is robust
+    submission_command: |
+      git add -A && git diff --cached
+    correct_response: |
+      THOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.
+
+      ```bash
+      ls -la
+      ```
+    incorrect_response: |
+      THOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.
+
+      ```bash
+      ls -la
+      ```
+
+      Now I'll read the file:
+
+      ```bash
+      cat file.txt
+      ```
+    useful_command_examples:
+    - name: "Create a new file"
+      command: |
+        ```bash
+        cat <<'EOF' > newfile.py
+        import numpy as np
+        hello = "world"
+        print(hello)
+        EOF
+        ```
+      description: |
+        This command creates a new file called newfile.py and writes the given content to it.
+    - name: "Edit a file with sed"
+      command: |
+        ```bash
+        # Replace all occurrences
+        sed -i 's/old_string/new_string/g' filename.py
+
+        # Replace only first occurrence
+        sed -i 's/old_string/new_string/' filename.py
+
+        # Replace first occurrence on line 1
+        sed -i '1s/old_string/new_string/' filename.py
+
+        # Replace all occurrences in lines 1-10
+        sed -i '1,10s/old_string/new_string/g' filename.py
+        ```
+      description: |
+        This command replaces all occurrences of "old_string" with "new_string" in the file called filename.py.
+    - name: "View file content"
+      command: |
+        ```bash
+        nl -ba filename.py | sed -n '10,20p'
+        ```
+      description: |
+        This command views the content of the file called filename.py from line 10 to line 20.
+
+  step_limit: 200
+  cost_limit: 0.25
+
+environment:
+  cwd: "/testbed"
+  timeout: 60
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+  environment_class: docker
+
+model:
+  model_name: "together_ai/EssentialAI/RNJ-1-instruct"
+  model_kwargs:
+    drop_params: true
+    temperature: 0.0

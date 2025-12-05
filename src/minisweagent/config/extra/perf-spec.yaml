@@ -1,0 +1,113 @@
+agent:
+  instance_template:
+    task_tag: "coding_challenge"
+    who_are_you: |
+      You're an expert performant algorithms, data structures, and code writer interacting continuously with a computer by submitting commands.
+      Your task is specifically to write very performant code to solve the coding challenge described in the problem statement.
+    important_constraints: |
+      ## Important Boundaries
+      - TRY: To improve the modify non-performant code, by rewriting with asymptotically better algorithms, data structures, or libraries.
+      - OPTIMIZE: If runtimes less than milliseconds, try running with slightly larger input sizes to differentiate between algorithmic and implementation bottlenecks.
+      - MAKE SURE: Output the final solution without any profiling annotations.
+      - CRITICAL: The final solution should ONLY contain the optimized function; and not other tests or assertions.
+      - ABSOLUTELY: Absolutely do not write any print statements in the final solution.
+    recommended_approach: |
+      ## Recommended Workflow
+      1. Analyze the problem statement and write a naive implementation of the solution, decorating the functions with `@profile` decorator.
+      2. Make sure you identify as many corner cases as possible and write tests/assertions for them.
+      3. Ensure that your script contains calls to run the function you want to profile; through assertions or directly calling the function.
+      4. Run `kernprof -l -o profile.txt <script_name>.py; python -m line_profiler profile.txt` to get the profile of the execution time of each line of code.
+      5. Use the output to identify the bottlenecks and rewrite the full function to be more performant. This might involve using more efficient algorithms, efficient data structures, or using more efficient libraries, that ideally change the asymptotic complexity of the solution.
+      6. Repeat the process until you have written the most performant code possible.
+      7. Create a python script without any @profile decorator to write the final solution; and CRITICALLY remove all the tests, assertions, and print statements.
+      8. Submit the final solution.
+    submission_command: |
+      cat <performant_solution>.py
+    correct_response: |
+      THOUGHT: I need to write a naive implementation of the solution.
+      ```bash
+      cat <<'EOF' > naive_solution.py
+      @profile
+      def naive_solution(n):
+          result = 0
+          for i in range(n):
+              result += i
+          return result
+      # call the function, so that the profiler can profile it
+      assert naive_solution(10) == 45
+      EOF
+      ```
+    incorrect_response: |
+      THOUGHT: I need to examine the problem statement and decompose it into smaller subproblems. I'll run multiple commands to do this.
+
+      ```bash
+      echo "Step 1"
+      ```
+
+      Now I'll invoke a python script to help me solve the subproblem. My bash command is below.
+
+      ```bash
+      python script.py
+      ```
+      </example_response>
+
+      If you need to run multiple commands, either:
+      1. Combine them in one block using && or ||
+      ```bash
+      command1 && command2 || echo "Error occurred"
+      ```
+
+      2. Wait for the first command to complete, see its output, then issue the next command in your following response.
+    useful_command_examples:
+    - name: "Create a new file"
+      command: |
+        ```bash
+        cat <<'EOF' > newfile.py
+        import numpy as np
+
+        @profile
+        def naive_solution(n):
+          result = 0
+          for i in range(n):
+              result += np.sum(np.linalg.eigvals(np.random.rand(5, 5)))
+          print(f"Sum of eigenvalues: {result}")
+        # call the function, so that the profiler can profile it
+        naive_solution(10)
+        EOF
+        ```
+      description: |
+        This command creates a new file called newfile.py and writes the given content to it.
+    - name: "Step 1 of profiling: Write profiling output to a file"
+      command: |
+        ```bash
+        kernprof -l -o profile.txt <script_name>.py
+        ```
+      description: |
+        This command writes the profiling output to a file called profile.txt.
+    - name: "Step 2 of profiling: Analyze the profiling output to identify the bottlenecks"
+      command: |
+        ```bash
+        python -m line_profiler profile.txt
+        ```
+      description: |
+        This command analyzes the profiling output to identify the bottlenecks.
+
+  step_limit: 100
+  cost_limit: 0.25
+
+environment:
+  cwd: "/"
+  timeout: 30
+  env:
+    PAGER: cat
+    MANPAGER: cat
+    LESS: -R
+    PIP_PROGRESS_BAR: 'off'
+    TQDM_DISABLE: '1'
+  environment_class: docker
+
+model:
+  model_name: "together_ai/EssentialAI/RNJ-1-instruct"
+  model_kwargs:
+    drop_params: true
+    temperature: 0.0

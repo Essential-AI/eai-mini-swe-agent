@@ -43,6 +43,13 @@ dependencies = [
     "textual",
     "prompt_toolkit",
     "openai != 1.100.0,!=1.100.1",  # https://github.com/SWE-agent/mini-swe-agent/issues/446
+    "datasets",
+    "google-cloud-storage",
+    "transformers",
+    "antlr4-python3-runtime==4.13.2", # math agent verify
+    "math-verify[antlr4_13_2]", # math agent verify
+    "enam", # performance agent verify
+    "gcsfs", # for accessing gcs stored datasets
 ]
 
 [project.optional-dependencies]

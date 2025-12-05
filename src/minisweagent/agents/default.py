@@ -2,8 +2,11 @@
 
 import re
 import subprocess
+import time
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
+import json
+import os
 
 from jinja2 import StrictUndefined, Template
 
@@ -54,12 +57,13 @@ class LimitsExceeded(TerminatingException):
 
 
 class DefaultAgent:
-    def __init__(self, model: Model, env: Environment, *, config_class: Callable = AgentConfig, **kwargs):
+    def __init__(self, model: Model, env: Environment, *, config_class: Callable = AgentConfig, instance_id: str = "", **kwargs):
         self.config = config_class(**kwargs)
         self.messages: list[dict] = []
         self.model = model
         self.env = env
         self.extra_template_vars = {}
+        self.instance_id: str = instance_id
 
     def render_template(self, template: str, **kwargs) -> str:
         template_vars = asdict(self.config) | self.env.get_template_vars() | self.model.get_template_vars()
@@ -88,13 +92,62 @@ class DefaultAgent:
     def step(self) -> dict:
         """Query the LM, execute the action, return the observation."""
         return self.get_observation(self.query())
+    
+    def _count_tokens(self):
+        tokens = 0
+        for message in self.messages:
+            approx_toks = len(message.get('content', '')) // 4
+            tokens += approx_toks
+        return tokens
+
+    def _append_json_to_log(self, payload):
+        """
+        Ensures a log file exists and appends a JSON object to it.
+        The log file is structured as a list of JSON objects.
+        
+        Args:
+            payload (dict): The JSON object to append.
+        """
+        model_name = self.model.config.model_name.replace("/", "-")
+        os.makedirs("./logs/", exist_ok=True)
+        timestamp = int(time.time())
+        file_path = f"./logs/{model_name}_{self.instance_id}.json"
+            
+        # Create the file if it doesn't exist
+        if not os.path.exists(file_path):
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump([], f, indent=4)
+
+        # Read existing data
+        with open(file_path, 'r', encoding='utf-8') as f:
+            try:
+                data = json.load(f)
+                if not isinstance(data, list):
+                    raise ValueError("Log file is not a JSON list.")
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                data = []  # Corrupted or empty file → start fresh
+
+        if payload["type"] == "request":
+            payload["approx_input_tokens"] = self._count_tokens()
+        
+        # Append the new entry
+        data.append(payload)
+
+        # Write updated data back
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=4, ensure_ascii=False)
+
 
     def query(self) -> dict:
         """Query the model and return the response."""
         if 0 < self.config.step_limit <= self.model.n_calls or 0 < self.config.cost_limit <= self.model.cost:
             raise LimitsExceeded()
+        if self.env.config.log_exact_requests:
+            self._append_json_to_log({ "type": "request", "payload": self.messages, "step": len(self.messages) })
         response = self.model.query(self.messages)
         self.add_message("assistant", **response)
+        if self.env.config.log_exact_requests:
+            self._append_json_to_log({ "type": "response", "payload": response, "step": len(self.messages) })
         return response
 
     def get_observation(self, response: dict) -> dict:

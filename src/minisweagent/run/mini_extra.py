@@ -11,6 +11,12 @@ subcommands = [
     ("minisweagent.run.github_issue", ["github-issue", "gh"], "Run on a GitHub issue"),
     ("minisweagent.run.extra.swebench", ["swebench"], "Evaluate on SWE-bench (batch mode)"),
     ("minisweagent.run.extra.swebench_single", ["swebench-single"], "Evaluate on SWE-bench (single instance)"),
+    ("minisweagent.run.extra.math_single", ["math-single"], "Evaluate on MATH (single instance)"),
+    ("minisweagent.run.extra.math", ["math"], "Evaluate on MATH (batch mode)"),
+    ("minisweagent.run.extra.perf_single", ["perf-single"], "Evaluate perf optimization (single instance)"),
+    ("minisweagent.run.extra.perf", ["perf"], "Evaluate perf optimization (batch mode)"),
+
+    ("minisweagent.run.extra.yolo_single", ["yolo-single"], "Evaluate with no plan (single instance)"),
 ]
 
 

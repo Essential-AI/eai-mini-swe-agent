@@ -73,6 +73,7 @@ def get_model_name(input_model_name: str | None = None, config: dict | None = No
 
 _MODEL_CLASS_MAPPING = {
     "anthropic": "minisweagent.models.anthropic.AnthropicModel",
+    "local-hosted": "minisweagent.models.local_hosted.LocallyHostedModel",
     "litellm": "minisweagent.models.litellm_model.LitellmModel",
     "openrouter": "minisweagent.models.openrouter_model.OpenRouterModel",
     "portkey": "minisweagent.models.portkey_model.PortkeyModel",
@@ -102,6 +103,10 @@ def get_model_class(model_name: str, model_class: str = "") -> type:
         from minisweagent.models.anthropic import AnthropicModel
 
         return AnthropicModel
+
+    if any(s in model_name.lower() for s in ["local"]):
+        from minisweagent.models.eai import LocallyHostedModel
+        return EaiModel
 
     # Default to LitellmModel
     from minisweagent.models.litellm_model import LitellmModel
