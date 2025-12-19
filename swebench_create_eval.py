@@ -24,7 +24,7 @@ DATASET_MAPPING = {
     "multilingual": "swe-bench/SWE-bench_Multilingual",
 }
 
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = ""
 DEFAULT_MODEL_CLASS = None
 DEFAULT_WORKERS = 50
 MAX_WORKERS_FOR_EVAL = 25
